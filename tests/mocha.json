@@ -1,0 +1,5 @@
+{
+  "spec": ["./tests/**/*.spec.mjs"],
+  "timeout": false,
+  "file": ["./tests/mocha.globals.mjs"]
+}

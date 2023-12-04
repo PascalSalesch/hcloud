@@ -1,0 +1,32 @@
+{
+  "name": "@pascalsalesch/hcloud",
+  "version": "1.0.0",
+  "description": "A declarative approach to managing Hetzner Cloud resources.",
+  "main": "src/hcloud.mjs",
+  "scripts": {
+    "start": "node src/hcloud.mjs",
+    "test": "c8 --config tests/c8.json npm-run-all test:*",
+    "test:lint": "eslint .",
+    "test:unit": "mocha --config tests/mocha.json"
+  },
+  "keywords": [],
+  "author": "Pascal Salesch <pascal.b.salesch@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "acorn": "^8.11.2",
+    "estraverse": "^5.3.0",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "c8": "^8.0.1",
+    "eslint": "^8.54.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-jsdoc": "^46.9.0",
+    "eslint-plugin-n": "^16.3.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "mocha": "^10.2.0",
+    "npm-run-all": "^4.1.5"
+  }
+}

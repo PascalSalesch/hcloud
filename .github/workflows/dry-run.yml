@@ -1,0 +1,21 @@
+on:
+  pull_request:
+    branches:
+      - latest
+
+jobs:
+  hetzner-cloud-dry-run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Apply Hetzner Cloud Configuration
+        uses: pascalsalesch/hcloud@latest
+        with:
+          run: |
+            create_server_config examples/hcloud.yml --dryRun
+            create_service_config examples/hcloud.yml examples --dryRun
+            create_proxy_config examples/hcloud.yml examples --dryRun
+        env:
+          GITHUB_TOKEN: ${{ secrets.GHCR_PACKAGES_READ }}

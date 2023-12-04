@@ -1,0 +1,34 @@
+name: 'Hetzner Cloud Configuration'
+description: 'Sets up a Hetzner Cloud configuration from a hcloud.yml file'
+author: 'Pascal Salesch <Pascal.B.Salesch@gmail.com>'
+inputs:
+  run:
+    description: 'The commands to run'
+    type: string
+    required: true
+    examples:
+      - 'create_server_config examples/hcloud.yml'
+      - 'create_service_config examples/hcloud.yml dist'
+      - 'create_proxy_config examples/hcloud.yml dist'
+  hcloud_token:
+    description: 'The Hetzner token to use for authentication'
+    type: string
+    required: false
+  github_workspace:
+    description: 'The GitHub workspace to use'
+    type: string
+    required: false
+    default: ''
+  github_token:
+    description: 'The GitHub token to use for authentication'
+    type: string
+    required: false
+    default: ''
+  github_actor:
+    description: 'The GitHub actor to use for authentication'
+    type: string
+    required: false
+    default: ''
+runs:
+  using: 'node20'
+  main: 'src/gha.mjs'

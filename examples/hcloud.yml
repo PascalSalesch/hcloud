@@ -1,0 +1,69 @@
+ssh_keys:
+  sysadmin:
+    user: root
+    private_key: ${file('.ssh/sysadmin')}
+    public_key: ${file('.ssh/sysadmin.pub')}
+
+servers:
+  app-production-nbg1-node1:
+    server_type: cx11
+    location: nbg1
+    ssh_keys:
+      - sysadmin
+    environment:
+      POSTGRES_HOST: db-nbg1-node1
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    services:
+      - app-production
+  app-preview-nbg1-node1:
+    server_type: cx11
+    location: nbg1
+    ssh_keys:
+      - sysadmin
+    environment:
+      POSTGRES_HOST: db-nbg1-node1
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    services:
+      - app-preview
+  db-nbg1-node1:
+    server_type: cx11
+    location: nbg1
+    ssh_keys:
+      - sysadmin
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    services:
+      - database
+    volumes:
+      - datastore
+
+volumes:
+  datastore:
+    size: 10
+    path: /data
+
+services:
+  app-production:
+    environment:
+      POSTGRES_DB: production
+    images:
+      - docker.io/nginxdemos/hello:latest
+    proxies:
+      - ${server.ipv4_address}:80:80
+  app-preview:
+    environment:
+      POSTGRES_DB: preview-${image.version}
+    images:
+      - ghcr.io/pascalsalesch/*:*
+    proxies:
+      - ${server.ipv4_address}:80:80/${image.version}
+  database:
+    images:
+      - docker.io/library/postgres:latest
+    ports:
+      - 5432:5432:5432
+    volumes:
+      - /data:/var/lib/postgresql/data
