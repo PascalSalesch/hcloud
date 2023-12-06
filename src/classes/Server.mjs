@@ -297,7 +297,7 @@ export default class Server {
         } else {
           const cmd = `${scp} ${path.relative(process.cwd(), srcPath)} ${sshKey.user}@${serverDetails.ipv4_address}:${destPath}`
           console.log(`$ ${cmd}`)
-          const output = await exec(cmd, { timeout: 10000 })
+          const output = await exec(cmd, { cwd: process.cwd(), timeout: 10000 })
           if (output.stdout.trim()) console.log('> ' + output.stdout.replaceAll('\n', '\n> '))
           if (output.exitCode) {
             console.warn('> ' + output.stderr.replaceAll('\n', '\n> '))

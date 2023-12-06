@@ -38,7 +38,7 @@ async function main () {
   const commands = (core.getMultilineInput('run')).map((command) => {
     if (command.startsWith('#')) return null
     if (!(command.trim())) return null
-    if (command === 'destroy') return 'terraform destroy -auto-approve'
+    if (command === 'destroy') return `cd ${path.resolve(cwd, 'dist')} && terraform destroy -auto-approve`
     if (!isValidCommand(command)) throw new Error(`Invalid command: ${command}`)
     for (const [key, value] of Object.entries(macros)) command = command.replaceAll(`\${${key}}`, value)
     return `node ${path.resolve(__root, 'src', 'hcloud.mjs')} ${command}`
