@@ -290,8 +290,6 @@ export default class Server {
     const scp = `scp -i ${path.relative(process.cwd(), sshKeyFile)} -o "StrictHostKeyChecking=no"`
     const ssh = `ssh -i ${path.relative(process.cwd(), sshKeyFile)} -o "StrictHostKeyChecking=no" ${sshKey.user}@${serverDetails.ipv4_address}`
 
-    console.log(sshKeyFile)
-    console.log(fs.readFileSync(sshKeyFile, { encoding: 'utf-8' }))
     await fs.promises.chmod(sshKeyFile, 0o600)
 
     const upload = async (src, dest) => {

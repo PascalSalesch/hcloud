@@ -28,7 +28,7 @@ servers:
     services:
       - app-preview
   db-nbg1-node1:
-    server_type: cx11
+    server_type: cax11
     location: nbg1
     ssh_keys:
       - sysadmin
