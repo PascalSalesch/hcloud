@@ -6,6 +6,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as url from 'node:url'
+import * as cmd from 'node:child_process'
 
 import * as stringUtils from '../utils/stringUtils.mjs'
 import parser from '../utils/parse.mjs'
@@ -284,9 +285,10 @@ export default class Server {
     if (sshKeyNames.length < 1) throw new Error(`Could not find any private SSH key for server "${this.name}".`)
     const sshKey = SSHKey.find((sshKey) => sshKeyNames.includes(sshKey.name) && sshKey.user)
     const sshKeyFile = path.resolve(ctx.stateFolder, '.ssh', sshKey.name)
-    const scp = `scp -i ${path.relative(process.cwd(), sshKeyFile)} -o "StrictHostKeyChecking=no"`
     const serverDetails = ctx.serverDetailsMapping[this.name]
     if (!serverDetails) throw new Error(`Could not find server details for server "${this.name}".`)
+    const scp = `scp -i ${path.relative(process.cwd(), sshKeyFile)} -o "StrictHostKeyChecking=no"`
+    const ssh = `ssh -i ${path.relative(process.cwd(), sshKeyFile)} -o "StrictHostKeyChecking=no" ${sshKey.user}@${serverDetails.ipv4_address}`
 
     console.log(sshKeyFile)
     console.log(fs.readFileSync(sshKeyFile, { encoding: 'utf-8' }))
@@ -299,9 +301,11 @@ export default class Server {
         if (dirent.isDirectory()) {
           await upload(srcPath, destPath)
         } else {
-          const cmd = `${scp} ${path.relative(process.cwd(), srcPath)} ${sshKey.user}@${serverDetails.ipv4_address}:${destPath}`
-          console.log(`$ ${cmd}`)
-          const output = await exec(cmd, { cwd: process.cwd(), timeout: 10000 })
+          cmd.execSync(`${ssh} mkdir -p ${path.dirname(destPath)}`, { stdio: 'inherit', cwd: process.cwd() })
+          if (!fs.existsSync(srcPath)) throw new Error(`File "${srcPath}" does not exist.`)
+          const commmand = `${scp} ${path.relative(process.cwd(), srcPath)} ${sshKey.user}@${serverDetails.ipv4_address}:${destPath}`
+          console.log(`$ ${commmand}`)
+          const output = await exec(commmand, { stdio: 'pipe', cwd: process.cwd() })
           if (output.stdout.trim()) console.log('> ' + output.stdout.replaceAll('\n', '\n> '))
           if (output.exitCode) {
             console.warn('> ' + output.stderr.replaceAll('\n', '\n> '))
