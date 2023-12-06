@@ -285,10 +285,12 @@ export default class Server {
     const sshKey = SSHKey.find((sshKey) => sshKeyNames.includes(sshKey.name) && sshKey.user)
     const sshKeyFile = path.resolve(ctx.stateFolder, '.ssh', sshKey.name)
     const scp = `scp -i ${path.relative(process.cwd(), sshKeyFile)} -o "StrictHostKeyChecking=no"`
-    console.log(sshKeyFile)
-    console.log(fs.readFileSync(sshKeyFile, { encoding: 'utf-8' }))
     const serverDetails = ctx.serverDetailsMapping[this.name]
     if (!serverDetails) throw new Error(`Could not find server details for server "${this.name}".`)
+
+    console.log(sshKeyFile)
+    console.log(fs.readFileSync(sshKeyFile, { encoding: 'utf-8' }))
+    await fs.promises.chmod(sshKeyFile, 0o600)
 
     const upload = async (src, dest) => {
       for (const dirent of await fs.promises.readdir(src, { withFileTypes: true })) {
