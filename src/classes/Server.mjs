@@ -299,7 +299,6 @@ export default class Server {
         if (dirent.isDirectory()) {
           await upload(srcPath, destPath)
         } else {
-          cmd.execSync(`${ssh} mkdir -p ${path.dirname(destPath)}`, { stdio: 'inherit', cwd: process.cwd() })
           if (!fs.existsSync(srcPath)) throw new Error(`File "${srcPath}" does not exist.`)
           const commmand = `${scp} ${path.relative(process.cwd(), srcPath)} ${sshKey.user}@${serverDetails.ipv4_address}:${destPath}`
           console.log(`$ ${commmand}`)
@@ -310,6 +309,17 @@ export default class Server {
             if (!options.force) throw new Error(`Execution of "${cmd}" failed.`)
           }
         }
+      }
+    }
+
+    // try for 2 minutes to connect to the server, then throw an error
+    const startTime = Date.now()
+    while (Date.now() - startTime < 120000) {
+      try {
+        cmd.execSync(`${ssh} mkdir -p ${path.dirname(dest)}`, { stdio: 'inherit', cwd: process.cwd() })
+        break
+      } catch (err) {
+        if (Date.now() - startTime >= 120000) throw new Error(`Could not connect to server "${this.name}"`)
       }
     }
     await upload(src, dest)
