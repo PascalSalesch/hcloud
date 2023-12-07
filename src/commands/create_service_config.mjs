@@ -80,14 +80,15 @@ export default async function createDockerComposeFromTfState (hcloudYAML, stateF
 async function uploadAndApply (ctx, server, options = {}) {
   const ssh = await server.upload(ctx, options)
   ssh.cmd = `ssh -i ${path.relative(process.cwd(), ssh.file)} -o "StrictHostKeyChecking=no" ${ssh.user}@${ssh.ip}`
+  const env = { ...process.env, ...server.environment }
 
   // login to the GitHub Container Registry
   if (ctx.ghcr[server.name]) {
     console.log(`Logging in to the GitHub Container Registry on server "${server.name}".`)
-    const token = server.environment.GITHUB_TOKEN ? await parser({ ...ctx }, server.environment.GITHUB_TOKEN) : process.env.GITHUB_TOKEN
-    const actor = server.environment.GITHUB_ACTOR ? await parser({ ...ctx }, server.environment.GITHUB_ACTOR) : process.env.GITHUB_ACTOR
-    const cmd = `docker login ghcr.io -u ${actor || 'github-actions'} --password-stdin"`
-    const cmdFull = `${ssh.cmd} "echo ${token} | ${cmd}`
+    env.token = env.GITHUB_TOKEN ? await parser({ ...ctx }, env.GITHUB_TOKEN) : process.env.GITHUB_TOKEN
+    env.actor = env.GITHUB_ACTOR ? await parser({ ...ctx }, env.GITHUB_ACTOR) : process.env.GITHUB_ACTOR
+    const cmd = `docker login ghcr.io -u ${env.actor || 'github-actions'} --password-stdin"`
+    const cmdFull = `${ssh.cmd} "echo ${env.token} | ${cmd}`
     console.log(`$ ${cmd}`)
     const output = await exec(cmdFull)
     if (output.stdout.trim()) console.log(output.stdout)
@@ -104,7 +105,7 @@ async function uploadAndApply (ctx, server, options = {}) {
   // apply the docker-compose.yml file
   const cmd = `${ssh.cmd} "cd /root/ && docker-compose up -d"`
   console.log(`$ ${cmd}`)
-  const output = await exec(cmd)
+  const output = await exec(cmd, { env })
   if (output.stdout.trim()) console.log(output.stdout)
   if (output.stderr.trim()) console.warn(output.stderr)
   if (output.exitCode && !options.force) throw new Error(`Execution of "${cmd}" failed.`)
