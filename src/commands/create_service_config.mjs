@@ -82,6 +82,12 @@ async function uploadAndApply (ctx, server, options = {}) {
   ssh.cmd = `ssh -i ${path.relative(process.cwd(), ssh.file)} -o "StrictHostKeyChecking=no" ${ssh.user}@${ssh.ip}`
   const env = { ...process.env, ...server.environment }
 
+  // wait for docker-compose to be installed on the server
+  const timeout = setTimeout(() => { console.log(`Waiting for docker-compose to be installed on server "${server.name}".`) }, 2000)
+  const waitCmd = `${ssh.cmd} "while ! docker-compose --version; do sleep 1; done"`
+  await exec(waitCmd, { stdio: 'inherit' })
+  clearTimeout(timeout)
+
   // login to the GitHub Container Registry
   if (ctx.ghcr[server.name]) {
     console.log(`Logging in to the GitHub Container Registry on server "${server.name}".`)
@@ -95,12 +101,6 @@ async function uploadAndApply (ctx, server, options = {}) {
     if (output.stderr.trim()) console.warn(output.stderr)
     if (output.exitCode && !options.force) throw new Error(`Execution of "${cmd}" failed.`)
   }
-
-  // wait for docker-compose to be installed on the server
-  const timeout = setTimeout(() => { console.log(`Waiting for docker-compose to be installed on server "${server.name}".`) }, 2000)
-  const waitCmd = `${ssh.cmd} "while ! docker-compose --version; do sleep 1; done"`
-  await exec(waitCmd, { stdio: 'inherit' })
-  clearTimeout(timeout)
 
   // apply the docker-compose.yml file
   const cmd = `${ssh.cmd} "cd /root/ && docker-compose up -d"`
