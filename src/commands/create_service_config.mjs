@@ -148,17 +148,15 @@ async function createDockerFile (ctx, serverDetails) {
   const hasGitHubContainerRegistryImages = images.some((image) => image.url.includes('ghcr.io'))
   if (hasGitHubContainerRegistryImages) ctx.ghcr[serverDetails.name] = true
 
-  // get extra_hosts
-  const extraHosts = Object.entries(ctx.serverDetailsMapping).map(([name, { ipv4_address: ip }]) => {
-    return `${name}:${ip}`
-  })
-
-  // create the docker-compose.yml file
+  // set the services
+  const extraHosts = Object.entries(ctx.serverDetailsMapping).map(([name, { ipv4_address: ip }]) => `${name}:${ip}`)
   const serviceString = images.map(({ content }) => {
     content = content.trim() + `\n  extra_hosts:\n${extraHosts.map(host => `      - ${host}`).join('\n')}`
     content = content.replaceAll('\n', '\n  ')
     return content
   }).join('\n\n  ')
+
+  // create the docker-compose.yml file
   const dockerComposeContent = stringUtils.trimLine(ctx, await parser({ ...ctx, services: serviceString }, content))
   const outputPath = path.resolve(output, 'docker-compose.yml')
   await fs.promises.writeFile(outputPath, dockerComposeContent)
