@@ -142,12 +142,23 @@ export default async function createNginXConfig (hcloudYAML, stateFolder, option
       const ssh = `ssh -i ${sshKeyFile} -o "StrictHostKeyChecking=no" ${sshKey.user}@${upstreamServer.host}`
       const command = `${ssh} docker-compose port ${upstreamServer.name} ${upstreamServer.image.port}`
       console.log(`$ ${command}`)
-      const output = await exec(command)
-      if (output.exitCode) {
-        console.warn(output.stderr)
-        throw new Error(`Execution of "${command}" failed.`)
+      let timeout = 0
+      while (true) {
+        try {
+          const output = await exec(command)
+          if (output.exitCode) {
+            console.warn(output.stderr)
+            throw new Error(`Execution of "${command}" failed.`)
+          }
+          upstreamServer.port = output.stdout.split(':')[1].trim()
+          break
+        } catch (err) {
+          if (timeout > 60000) throw err
+          timeout += 5000
+          console.log(`Retrying in 5 seconds (${timeout}/10).`)
+          await new Promise(resolve => setTimeout(resolve, 5000))
+        }
       }
-      upstreamServer.port = output.stdout.split(':')[1].trim()
       console.log(`Found host port "${upstreamServer.port}" for image "${upstreamServer.image.name}" on server "${upstreamServer.host}".`)
     }
   }
