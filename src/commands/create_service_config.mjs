@@ -150,7 +150,6 @@ async function createDockerFile (ctx, serverDetails) {
 
   // get extra_hosts
   const extraHosts = Object.entries(ctx.serverDetailsMapping).map(([name, { ipv4_address: ip }]) => {
-    if (name === serverDetails.name) return `${name}:127.0.0.1`
     return `${name}:${ip}`
   })
 
